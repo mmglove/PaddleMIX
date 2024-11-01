@@ -17,7 +17,7 @@ bs_item=16
 fp_item=fp32
 run_mode=DP
 device_num=N1C8
-max_iter=20
+max_iter=400
 num_workers=4
 
 # get data
