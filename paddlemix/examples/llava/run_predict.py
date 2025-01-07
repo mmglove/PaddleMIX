@@ -16,24 +16,24 @@ import argparse
 
 import paddle
 from paddlenlp.generation import TextStreamer
-
-from paddlemix.auto import AutoProcessorMIX
 from paddlemix.models.llava.constants import (
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_TOKEN,
 )
 from paddlemix.models.llava.conversation import conv_templates
+from paddlemix.models.llava.mm_utils import get_model_name_from_path, load_image
+
+from paddlemix.utils.log import logger
+
+import os
 from paddlemix.models.llava.language_model.llava_llama import (
     LlavaConfig,
     LlavaLlamaForCausalLM,
 )
 from paddlemix.models.llava.language_model.tokenizer import LLavaTokenizer
-from paddlemix.models.llava.mm_utils import get_model_name_from_path, load_image
-
-# from paddlemix.processors import LlavaProcessor
-from paddlemix.utils.log import logger
-
+from paddlemix.processors import LlavaProcessor
+from paddlenlp.transformers import CLIPImageProcessor
 
 def main(args):
     paddle.seed(seed=0)
@@ -47,18 +47,21 @@ def main(args):
         compute_dtype = "float32"
 
     model_name = get_model_name_from_path(args.model_path)
-    tokenizer = LLavaTokenizer.from_pretrained(args.model_path)
-    model_config = LlavaConfig.from_pretrained(args.model_path)
-    model = LlavaLlamaForCausalLM.from_pretrained(args.model_path, dtype=compute_dtype)
+    
+    model_name_or_path = args.model_path
+    tokenizer = LLavaTokenizer.from_pretrained(model_name_or_path)
+    model_config = LlavaConfig.from_pretrained(model_name_or_path)
+    model = LlavaLlamaForCausalLM.from_pretrained(model_name_or_path, dtype=compute_dtype)
     model.eval()
+    name_or_path = (os.path.join(model_name_or_path, "processor", "eval"))
+    image_processor = CLIPImageProcessor.from_pretrained(name_or_path)
+    processor = LlavaProcessor(
+        image_processor, 
+        tokenizer,
+        max_length=args.max_new_tokens, 
+        image_aspect_ratio=model_config.image_aspect_ratio
+        )
 
-    processor, _ = AutoProcessorMIX.from_pretrained(
-        args.model_path,
-        eval="eval",
-        max_length=args.max_new_tokens,
-        image_aspect_ratio=model_config.image_aspect_ratio,
-    )
-    # processor = LlavaProcessor.from_pretrained(args.model_path, eval="eval", max_length=args.max_new_tokens, image_aspect_ratio=model_config.image_aspect_ratio)
 
     model.resize_token_embeddings(len(tokenizer))
     vision_tower = model.get_vision_tower()
@@ -108,25 +111,51 @@ def main(args):
 
     streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
-    with paddle.no_grad():
-        output_ids = model.generate(
-            input_ids=data_dict["input_ids"],
-            images=paddle.cast(data_dict["images"], compute_dtype),
-            image_sizes=[image_size],
-            decode_strategy="sampling" if args.temperature > 0 else "greedy_search",
-            temperature=args.temperature,
-            max_new_tokens=args.max_new_tokens,
-            streamer=streamer,
-            use_cache=True,
-        )
+    if args.benchmark:
+        import time
+        start = 0.0
+        total = 0.0
+        for i in range(20):
+            if i>10:
+                start = time.time()
 
-    outputs = tokenizer.decode(output_ids[0][0]).strip().split("<|im_end|>")[0]
-    print("outputs:\n", outputs)
+            with paddle.no_grad():
+                output_ids = model.generate(
+                    input_ids=data_dict["input_ids"],
+                    images=paddle.cast(data_dict["images"], compute_dtype),
+                    image_sizes=[image_size],
+                    decode_strategy="sampling" if args.temperature > 0 else "greedy_search",
+                    temperature=args.temperature,
+                    max_new_tokens=args.max_new_tokens,
+                    streamer=streamer,
+                    use_cache=True,
+                )
+            if i > 10:
+                total += time.time()-start
+            
+        print("Time: ", total/10)
+        print("temperature: ", args.temperature)
+        print("compute_dtype:", compute_dtype)
+    
+    else:
+        with paddle.no_grad():
+            output_ids = model.generate(
+                input_ids=data_dict["input_ids"],
+                images=paddle.cast(data_dict["images"], compute_dtype),
+                image_sizes=[image_size],
+                decode_strategy="sampling" if args.temperature > 0 else "greedy_search",
+                temperature=args.temperature,
+                max_new_tokens=args.max_new_tokens,
+                streamer=streamer,
+                use_cache=True,
+            )
+        outputs = tokenizer.decode(output_ids[0][0]).strip().split("<|im_end|>")[0].split("</s>")[0]
+        print("outputs:\n", outputs)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-path", type=str, default="paddlemix/llava/llava-v1.5-7b")
+    parser.add_argument("--model-path", type=str, default="liuhaotian/llava-v1.6-vicuna-7b")
     parser.add_argument("--question", type=str, default="What is shown in this image?")
     parser.add_argument("--image-file", type=str, required=True)
     parser.add_argument("--conv-mode", type=str, default=None)
@@ -134,5 +163,6 @@ if __name__ == "__main__":
     parser.add_argument("--max-new-tokens", type=int, default=512)
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--benchmark", action="store_true")
     args = parser.parse_args()
     main(args)

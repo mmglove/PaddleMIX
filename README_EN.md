@@ -34,17 +34,38 @@
 
 
 ## 📰 News
-**🔥 Live Class on October 31, 2024，PaddleMIX release v2.1**
 
-- 🎉 The PaddleMIX Multimodal Model Suite Development Competition release v2.1! Baidu's R&D engineers will provide a detailed explanation of the updated content, as well as the implementation details and case applications of the multi-modal data capability tagging model, PP-InsCapTagger, at 20:00 on Thursday, October 31st. Hurry up and scan the QR code on the poster below to register!
+**🔥PaddleMIX Development Project Challenge (November 21 - December 22, 2024)**
 
-<div align="center">
-<img src="https://github.com/user-attachments/assets/a32745a1-34bb-4096-a367-664ae58e3565" width="500px" align="middle"></img>
-</div>
 
+**🔥Live Course on January 7th, 2025: New PaddlePaddle PP Series Models Released!**
+
+- ✨PP-DocBee: A New 'Bee'-ginning in Document Image Understanding!
+To help you quickly and deeply understand **PaddleMIX**'s **PP-DocBee document understanding model** and master practical skills, Baidu's senior R&D engineers will provide a detailed explanation of PP-DocBee's core technology and demonstrate the complete development process of multimodal large models at **19:00 on January 7th (Tuesday)**. Scan the QR code below to register now!
+<details>
+<summary>Click to expand event poster</summary>
+<p align="center">
+<img src='https://github.com/user-attachments/assets/3b7adc9e-c68d-44d1-9674-05b933947deb'  width="80%">
+</p>
+</details>
 
 
 ## 📣 Latest Developments
+**🎉 2024.01.02 Added support for [PP-DocBee](./paddlemix/examples/ppdocbee) inference and training, supporting [high-performance inference](./deploy/ppdocbee)**
+
+**🎉 2024.12.17 Support for [InternVL2_5 (1B, 2B, 4B, 8B)](./paddlemix/examples/internvl2) inference**
+
+**🎉 2024.11.27 Added support for [Janus/JanusFlow](./paddlemix/examples/janus) inference**
+
+**🎉 2024.11.21 Added support for [MiniCPM-V-2_6](./paddlemix/examples/minicpm-v-2_6) inference**
+
+**🎉 2024.11.8 Support for [DenseConnector](./paddlemix/examples/llava_denseconnector) and [Aquila-VL-2B-llava-qwen](./paddlemix/examples/llava_onevision/) inference**
+
+**🎉 2024.11.1 Support for [LLaVA-OneVision](./paddlemix/examples/llava_onevision/) and [LLaVA-Critic](./paddlemix/examples/llava_critic/) inference**
+
+
+<details>
+<summary>Click to expand more</summary>
 
 **🎉 2024.10.31 Welcome to the Update of External Developer's Creative [Tutorial Page](paddlemix_applications.md)**
 * 🌟 Since the launch of our Large Model Suite Premium Project Collection activity on September 6th, we have received 30 high-quality developer projects. Among them, 25 premium projects have successfully passed the platform evaluation and been featured.
@@ -68,6 +89,9 @@
 * Added distributed training capabilities for vision-language pre-training models, and BLIP-2 now supports trillion-scale training.
 * Introduced the cross-modal application pipeline [AppFlow](./applications/README.md), which supports 11 cross-modal applications such as automatic annotation, image editing, and audio-to-image with one click.
 * [PPDiffusers](./ppdiffusers/README.md) released version 0.19.3, adding SDXL and related tasks.
+</details>
+
+
 ---
 
 ## 🌈 Introduction
@@ -128,26 +152,24 @@ The multimodal data processing toolbox, DataCopilot, accelerates model iteration
 
 
 ## 🔍 Installation
-### 1. Clone the PaddleMIX Repository
-
+### 1. Clone PaddleMIX Repository
 ```
 git clone https://github.com/PaddlePaddle/PaddleMIX
 cd PaddleMIX
 ```
 
-### 2. Create a Virtual Environment
-
+### 2. Create Virtual Environment
 ```
 conda create -n paddlemix python=3.10 -y
 conda activate paddlemix
 ```
-### 3. Install PaddlePaddle
 
-#### Method 1: One-Click Installation (Recommended for GPU/CPU)
+### 3. ‼️ Install PaddlePaddle
+
+#### Method 1: One-click Installation (Recommended for GPU/CPU)
 
 - CUDA 11.x or 12.3
 - PaddlePaddle 3.0.0b1
-
 ```
 sh build_paddle_env.sh
 ```
@@ -155,49 +177,52 @@ sh build_paddle_env.sh
 #### Method 2: Manual Installation
 For detailed instructions on installing PaddlePaddle, please refer to the [Installation Guide](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html).
 
-### 4. Ascend Environment Installation (Optional)
-
-Currently, PaddleMIX supports the Ascend 910B chip (more models are in progress; if you have other model requirements, please submit an issue to let us know). The Ascend driver version is 23.0.3. Considering the variability in environments, we recommend using the standard image provided by PaddlePaddle to prepare your environment.
-
-* Refer to the command below to start the container; `ASCEND_RT_VISIBLE_DEVICES` specifies the visible NPU card numbers.
-
-
-```shell
-docker run -it --name paddle-npu-dev -v $(pwd):/work \
-    --privileged --network=host --shm-size=128G -w=/work \
-    -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
-    -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \
-    -v /usr/local/dcmi:/usr/local/dcmi \
-    -e ASCEND_RT_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" \
-    registry.baidubce.com/device/paddle-npu:cann80T13-ubuntu20-$(uname -m)-gcc84-py39 /bin/bash
-```
-
-* Install PaddlePaddle inside the container
-
-```shell
-# Note: You need to install the CPU version of PaddlePaddle first. Currently, only Python 3.9 is supported.
-python -m pip install --pre paddlepaddle -i https://www.paddlepaddle.org.cn/packages/nightly/cpu/
-python -m pip install --pre paddle-custom-npu -i https://www.paddlepaddle.org.cn/packages/nightly/npu/
-```
-
-
-### 5. Install Dependencies
+### 4. ‼️ Install Dependencies
 
 #### Method 1: One-Click Installation (Recommended)
-
-Run the following command to automatically install all necessary dependencies:
-
 ```
 sh build_env.sh
 ```
+#### Method 2: Manual Installation
+```bash
+# Install PaddleMIX
+pip install -e .
+# Install ppdiffusers
+cd ppdiffusers
+pip install -e .
+cd ..
+
+### 5. ‼️ Verify Installation
+
+Run the following command to verify your installation:
+```bash
+sh check_env.sh
+```
+
+Recommended versions for environment and dependencies:
+- paddlepaddle: 3.0.0b2 or develop version
+- paddlenlp: 3.0.0b2
+- ppdiffusers: 0.29.0
+- huggingface_hub: 0.23.0
+
+### 6. Install Custom Operators (Optional)
+* Some models require custom operators (FastLayerNorm, FusedLayerNorm), such as EVA-CLIP, DIT_LLAMA, etc.
+* Skip this step for non-CUDA environments (e.g., Ascend NPU)
+* ```bash
+cd paddlemix/external_ops
+python setup.py install
+```
+
+
+
 
 #### Method 2: Manual Installation (Please refer to build_env.sh)
 ## 🔥 Tutorials
 
 **Quick Start**
-- [Multimodal Understanding: Beginner's Experience](paddlemix/examples/internvl2/README.md)
-- [Multimodal Generation: Zero-Basics Getting Started Guide](ppdiffusers/examples/inference/README.md)
-- [Cross-Modal Task Pipeline: End-to-End Process Demonstration](applications/README.md/#quick-start)
+- [Multimodal Understanding: Beginner's Guide [Example: InternVL2 Model]](paddlemix/examples/internvl2/README.md)
+- [Multimodal Generation: Zero to Hero Guide [Example: Stable Diffusion Model]](ppdiffusers/examples/stable_diffusion/README.md)
+- [Cross-modal Task Pipeline: Getting Started](applications/README.md/#getting-started)
 
 **Hands-On Practice & Examples**
 - [LLaVA Model: Full Process Practice from Training to Inference](https://aistudio.baidu.com/projectdetail/7917712)
@@ -225,6 +250,9 @@ sh build_env.sh
       <td>
         <b>Multimodal Generation</b>
       </td>
+      <td>
+        <b>Unified Multimodal Foundation Model</b>
+      </td>
     </tr>
     <tr valign="top">
       <td>
@@ -234,10 +262,13 @@ sh build_env.sh
         <ul>
             <li><a href="paddlemix/examples/clip">CLIP</a></li>
             <li><a href="paddlemix/examples/evaclip">EVA-CLIP</a></li>
-            <li><a href="paddlemix/examples/llava">LLaVA</a></li>
             <li><a href="paddlemix/examples/llava">LLaVA-1.5</a></li>
             <li><a href="paddlemix/examples/llava">LLaVA-1.6</a></li>
             <li><a href="paddlemix/examples/llava">LLaVA-NeXT</a></li>
+            <li><a href="paddlemix/examples/llava_onevision">LLaVA-onevision</a></li>
+            <li><a href="paddlemix/examples/llava_onevision">Aquila-VL-2B-llava-qwen</a></li>
+            <li><a href="paddlemix/examples/llava_critic">LLaVA-Critic</a></li>
+            <li><a href="paddlemix/examples/llava_denseconnector">LLaVA-DenseConnector</a></li>
             <li><a href="paddlemix/examples/qwen_vl">Qwen-VL</a></li>
             <li><a href="paddlemix/examples/qwen2_vl">Qwen2-VL</a></li>
             <li><a href="paddlemix/examples/internvl2">InternVL2</a></li>
@@ -254,6 +285,7 @@ sh build_env.sh
         <ul>
             <li><a href="paddlemix/examples/groundingdino">Grounding DINO</a></li>
             <li><a href="paddlemix/examples/sam">SAM</a></li>
+            <li><a href="paddlemix/examples/sam2">SAM2</a></li>
             <li><a href="paddlemix/examples/YOLO-World">YOLO-World</a></li>
       </ul>
       </ul>
@@ -294,6 +326,14 @@ sh build_env.sh
         <ul>
            <li><a href="ppdiffusers/ppdiffusers/pipelines/audioldm">AudioLDM</a></li>
            <li><a href="ppdiffusers/ppdiffusers/pipelines/audioldm2">AudioLDM2</a></li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+        </ul>
+          <li><b>Unified Multimodal Model</b></li>
+        <ul>
+          <li><a href="paddlemix/examples/janus">Janus</a></li>
         </ul>
       </td>
     </tr>
